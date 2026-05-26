@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Учет финансов - Даттыбае</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <header class="pb-3 mb-4 border-bottom">
+            <span class="fs-4 text-darkfw-bold">📊 Система учета персональных финансов</span>
+        </header>
+
+        <div class="card shadow-sm p-4 mb-4 border-primary">
+    <h5 class="card-title mb-3 text-primary">🔐 Регистрация в системе</h5>
+    <form id="registerForm">
+        <div class="mb-2">
+            <input type="text" id="regUsername" class="form-control form-control-sm" placeholder="Придумайте логин" required>
+        </div>
+        <div class="mb-2">
+            <input type="password" id="regPassword" class="form-control form-control-sm" placeholder="Придумайте пароль" required>
+        </div>
+        <button type="submit" class="btn btn-outline-primary btn-sm w-100">Создать аккаунт</button>
+    </form>
+    <div id="regMessage" class="mt-2 small d-none"></div>
+</div>
+
+        <div class="row">
+            <div class="col-md-5 mb-4">
+                <div class="card shadow-sm p-4">
+                    <h5 class="card-title mb-3">Добавить расход</h5>
+                    <form id="transactionForm">
+                        <div class="mb-3">
+                            <label class="form-label">Сумма (руб.)</label>
+                            <input type="number" id="amount" class="form-control" placeholder="0.00" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Категория</label>
+                            <select id="category" class="form-select" required>
+                                <option value="Продукты">Продукты</option>
+                                <option value="Транспорт">Транспорт</option>
+                                <option value="Жилье">Жилье</option>
+                                <option value="Развлечения">Развлечения</option>
+                                <option value="Прочее">Прочее</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Комментарий</label>
+                            <input type="text" id="description" class="form-control" placeholder="Например: Покупка в магазине">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Сохранить операцию</button>
+                    </form>
+                </div>
+
+                <div class="card shadow-sm p-4 mt-4">
+                    <h5 class="card-title mb-3">Аналитика расходов</h5>
+                    <canvas id="analyticsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="col-md-7">
+                <div class="card shadow-sm p-4">
+                    <h5 class="card-title mb-3">История транзакций</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Сумма</th>
+                                    <th>Категория</th>
+                                    <th>Описание</th>
+                                    <th>Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTable">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const API_URL = "http://127.0.0.1:8000/transactions";
+    let myChart = null; // Переменная для хранения объекта графика
+
+    // Логика для регистрации нового пользователя
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = document.getElementById("regUsername").value;
+    const password = document.getElementById("regPassword").value;
+    const messageDiv = document.getElementById("regMessage");
+
+    try {
+        const response = await fetch("http://127.0.0.1:8000/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            messageDiv.className = "mt-2 small text-successfw-bold";
+            messageDiv.innerText = `🎉 Пользователь ${data.username} успешно зарегистрирован!`;
+            document.getElementById("registerForm").reset();
+        } else {
+            messageDiv.className = "mt-2 small text-dangerfw-bold";
+            messageDiv.innerText = `❌ Ошибка: ${data.detail || "Не удалось зарегистрироваться"}`;
+        }
+    } catch (error) {
+        messageDiv.className = "mt-2 small text-dangerfw-bold";
+        messageDiv.innerText = "❌ Ошибка соединения с сервером";
+    }
+
+    messageDiv.classList.remove("d-none");
+});
+
+    // Функция для отрисовки/обновления графика Chart.js
+    async function updateChart() {
+        const response = await fetch(`${API_URL}/analytics`);
+        const analyticsData = await response.json();
+
+        const categories = Object.keys(analyticsData);
+        const amounts = Object.values(analyticsData);
+
+        const ctx = document.getElementById('analyticsChart').getContext('2d');
+
+        if (myChart) {
+            myChart.destroy();
+        }
+
+        myChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: categories,
+                datasets: [{
+                    data: amounts,
+                    backgroundColor: [
+                        '#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#9966ff'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    // Функция получения данных из API и отрисовки таблицы
+    async function loadTransactions() {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        const tableBody = document.getElementById("transactionsTable");
+        tableBody.innerHTML = "";
+
+        data.forEach(item => {
+            const row = `
+                <tr>
+                    <td>${item.id}</td>
+                    <td class="fw-bold text-danger">-${item.amount} ₽</td>
+                    <td><span class="badge bg-secondary">${item.category}</span></td>
+                    <td class="text-muted">${item.description || ''}</td>
+                    <td>чё
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction(${item.id})">🗑️</button>
+                    </td>
+                </tr>
+            `;
+            tableBody.insertAdjacentHTML("beforeend", row);
+        });
+
+        // Каждое обновление таблицы теперь дергает и обновление графика!
+        updateChart();
+    }
+
+    // Функция отправки нового расхода в бэкенд
+    document.getElementById("transactionForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const amount = document.getElementById("amount").value;
+        const category = document.getElementById("category").value;
+        const description = document.getElementById("description").value;
+
+        await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount: parseFloat(amount), category, description })
+        });
+
+        document.getElementById("transactionForm").reset();
+        loadTransactions();
+    });
+
+    // Функция удаления транзакции
+    async function deleteTransaction(id) {
+        if (confirm("Удалить эту запись?")) {
+            await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+            loadTransactions();
+        }
+    }
+
+    // Запуск при загрузке страницы
+    loadTransactions();
+</script>
+</body>
+</html>

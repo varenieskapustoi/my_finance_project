@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход в систему</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .card {
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .form-control {
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            color: white;
+        }
+
+        .form-control:focus {
+            background-color: #2d2d2d;
+            color: white;
+            border-color: #0d6efd;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card shadow">
+    <h3 class="text-center mb-4 text-white">Войти в учетную запись</h3>
+    <div id="alert-box" class="alert alert-danger d-none"></div>
+
+    <form id="loginForm">
+        <div class="mb-3">
+            <label class="form-label text-light">Имя пользователя</label>
+            <input type="text" id="username" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-light">Пароль</label>
+            <input type="password" id="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Войти</button>
+    </form>
+    <p class="text-center mt-3 mb-0"><a href="/register-page" class="text-info text-decoration-none">Нет аккаунта?
+        Зарегистрироваться</a></p>
+</div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const alertBox = document.getElementById('alert-box');
+        alertBox.classList.add('d-none');
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username, password})
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Если вошли успешно — редиректим на главную страницу с расходами
+            window.location.href = '/';
+        } else {
+            alertBox.innerText = data.detail || 'Ошибка входа';
+            alertBox.classList.remove('d-none');
+        }
+    });
+</script>
+</body>
+</html>
