@@ -45,8 +45,6 @@ def get_register_page(request: Request):
 
 # --- ЭНДПОИНТЫ ДЛЯ АНАЛИТИКИ И ТРАНЗАКЦИЙ ---
 
-# --- ЭНДПОИНТЫ ДЛЯ АНАЛИТИКИ И ТРАНЗАКЦИЙ (ОБНОВЛЕННЫЕ) ---
-
 @app.get("/transactions/analytics", tags=["Транзакции"])
 def get_analytics(request: Request, db: Session = Depends(get_db)):
     """Получить агрегированные данные по категориям строго для вошедшего юзера"""
@@ -81,22 +79,46 @@ def get_transactions(request: Request, db: Session = Depends(get_db)):
 
 @app.post("/transactions", response_model=schemas.Transaction, tags=["Транзакции"])
 def create_transaction(request: Request, item: schemas.TransactionCreate, db: Session = Depends(get_db)):
-    """Добавить новую транзакцию для вошедшего пользователя"""
+    """Добавить новую транзакцию (доход или расход) для вошедшего пользователя"""
     user_id = request.cookies.get("user_id")
     if not user_id:
         raise HTTPException(status_code=401, detail="Вы не авторизованы")
 
-    # Убираем заглушку "1" и ставим реальный ID из куки
     new_item = models.Transaction(
         amount=item.amount,
         category=item.category,
+        type=item.type,  # Подхватываем тип из фронтенда/схемы
         description=item.description,
-        user_id=int(user_id)  # Теперь трата привязана к конкретному юзеру!
+        user_id=int(user_id)
     )
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
     return new_item
+
+@app.get("/transactions/balance", tags=["Транзакции"])
+def get_balance(request: Request, db: Session = Depends(get_db)):
+    """Посчитать общий баланс, сумму доходов и сумму расходов для текущего юзера"""
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Вы не авторизованы")
+
+    transactions = db.query(models.Transaction).filter(models.Transaction.user_id == int(user_id)).all()
+
+    total_income = 0.0
+    total_expense = 0.0
+
+    for t in transactions:
+        if t.type == "income":
+            total_income += t.amount
+        else:
+            total_expense += t.amount
+
+    return {
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "balance": total_income - total_expense
+    }
 
 
 @app.get("/transactions", response_model=list[schemas.Transaction], tags=["Транзакции"])

@@ -7,6 +7,7 @@ from datetime import datetime
 class TransactionCreate(BaseModel):
     amount: float
     category: str
+    type: str
     description: str | None = None
 
 # Полная схема: что мы отдаем обратно (уже содержит ID и дату из базы)
