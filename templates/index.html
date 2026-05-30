@@ -2,210 +2,397 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Учет финансов - Даттыбае</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учет Финансов — Панель управления</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .navbar {
+            background-color: #1e1e1e;
+            border-bottom: 1px solid #333;
+        }
+
+        .card-custom {
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .form-control, .form-select {
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            color: #ffffff !important;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: #2d2d2d;
+            color: #ffffff !important;
+            border-color: #0d6efd;
+            box-shadow: none;
+        }
+
+        .form-control::placeholder {
+            color: #777777;
+        }
+
+        .table {
+            color: #ffffff !important;
+            --bs-table-bg: #1e1e1e !important;
+            --bs-table-hover-bg: #2d2d2d !important;
+        }
+
+        .table th {
+            color: #bbbbbb !important;
+            border-bottom-color: #333 !important;
+            font-weight: 600;
+            background-color: #1e1e1e !important;
+        }
+
+        .table td {
+            border-bottom-color: #222 !important;
+            vertical-align: middle;
+            color: #ffffff !important;
+            background-color: #1e1e1e !important;
+        }
+
+        .text-muted {
+            color: #aaaaaa !important;
+        }
+
+        .text-light-custom {
+            color: #e0e0e0 !important;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-    <div class="container py-5">
-        <header class="pb-3 mb-4 border-bottom">
-            <span class="fs-4 text-darkfw-bold">📊 Система учета персональных финансов</span>
-        </header>
+<nav class="navbar navbar-expand-lg mb-4">
+    <div class="container" style="max-width: 1024px;">
+        <span class="navbar-brand text-white fw-bold">💰 Мои Финансы</span>
+        <button onclick="logout()" class="btn btn-outline-danger btn-sm rounded-pill px-3">Выйти</button>
+    </div>
+</nav>
 
-        <div class="card shadow-sm p-4 mb-4 border-primary">
-    <h5 class="card-title mb-3 text-primary">🔐 Регистрация в системе</h5>
-    <form id="registerForm">
-        <div class="mb-2">
-            <input type="text" id="regUsername" class="form-control form-control-sm" placeholder="Придумайте логин" required>
-        </div>
-        <div class="mb-2">
-            <input type="password" id="regPassword" class="form-control form-control-sm" placeholder="Придумайте пароль" required>
-        </div>
-        <button type="submit" class="btn btn-outline-primary btn-sm w-100">Создать аккаунт</button>
-    </form>
-    <div id="regMessage" class="mt-2 small d-none"></div>
-</div>
+<div class="container" style="max-width: 1024px;">
 
-        <div class="row">
-            <div class="col-md-5 mb-4">
-                <div class="card shadow-sm p-4">
-                    <h5 class="card-title mb-3">Добавить расход</h5>
-                    <form id="transactionForm">
-                        <div class="mb-3">
-                            <label class="form-label">Сумма (руб.)</label>
-                            <input type="number" id="amount" class="form-control" placeholder="0.00" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Категория</label>
-                            <select id="category" class="form-select" required>
-                                <option value="Продукты">Продукты</option>
-                                <option value="Транспорт">Транспорт</option>
-                                <option value="Жилье">Жилье</option>
-                                <option value="Развлечения">Развлечения</option>
-                                <option value="Прочее">Прочее</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Комментарий</label>
-                            <input type="text" id="description" class="form-control" placeholder="Например: Покупка в магазине">
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Сохранить операцию</button>
-                    </form>
-                </div>
-
-                <div class="card shadow-sm p-4 mt-4">
-                    <h5 class="card-title mb-3">Аналитика расходов</h5>
-                    <canvas id="analyticsChart"></canvas>
-                </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card-custom shadow-sm">
+                <div class="text-uppercase tracking-wider text-muted small fw-medium">Текущий баланс</div>
+                <h2 id="balance" class="fw-bold mt-2 text-white">0 сом</h2>
             </div>
-
-            <div class="col-md-7">
-                <div class="card shadow-sm p-4">
-                    <h5 class="card-title mb-3">История транзакций</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Сумма</th>
-                                    <th>Категория</th>
-                                    <th>Описание</th>
-                                    <th>Действие</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transactionsTable">
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-custom shadow-sm">
+                <div class="text-uppercase tracking-wider text-success small fw-medium">Всего Доходов</div>
+                <h2 id="total_income" class="fw-bold mt-2 text-success">+ 0 сом</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-custom shadow-sm">
+                <div class="text-uppercase tracking-wider text-danger small fw-medium">Всего Расходов</div>
+                <h2 id="total_expense" class="fw-bold mt-2 text-danger">- 0 сом</h2>
             </div>
         </div>
     </div>
 
-    <script>
-    const API_URL = "http://127.0.0.1:8000/transactions";
-    let myChart = null; // Переменная для хранения объекта графика
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card-custom shadow-sm mb-4">
+                <h4 class="fw-bold mb-4 text-light-custom">Новая операция</h4>
+                <form id="transactionForm">
+                    <div class="mb-3">
+                        <label class="form-label text-light-custom small fw-medium">Тип операции</label>
+                        <select id="type" class="form-select">
+                            <option value="expense">Расход</option>
+                            <option value="income">Доход</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light-custom small fw-medium">Сумма (сом)</label>
+                        <input type="number" id="amount" class="form-control" placeholder="0.00" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label text-light-custom small fw-medium">Категория</label>
+                        <select class="form-select" id="category" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light-custom small fw-medium">Описание</label>
+                        <input type="text" id="description" class="form-control" placeholder="Комментарий к платежу">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-medium shadow-sm mt-2">
+                        Сохранить
+                    </button>
+                </form>
+            </div>
 
-    // Логика для регистрации нового пользователя
-document.getElementById("registerForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const username = document.getElementById("regUsername").value;
-    const password = document.getElementById("regPassword").value;
-    const messageDiv = document.getElementById("regMessage");
+            <div class="card-custom shadow-sm text-center">
+                <h5 class="text-white mb-3">Аналитика расходов</h5>
+                <div class="mb-4" style="max-height: 220px; display: flex; justify-content: center;">
+                    <canvas id="analyticsChart"></canvas>
+                </div>
 
-    try {
-        const response = await fetch("http://127.0.0.1:8000/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
+                <hr style="border-color: #333;">
+
+                <div class="mt-4">
+                    <h5 class="text-white mb-3">Соотношение доходов и расходов</h5>
+                    <div style="max-height: 220px; display: flex; justify-content: center;">
+                        <canvas id="incomeExpenseChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card-custom shadow-sm">
+                <h4 class="fw-bold mb-4 text-light-custom">История операций</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>Категория</th>
+                            <th>Описание</th>
+                            <th>Сумма</th>
+                            <th class="text-end">Действие</th>
+                        </tr>
+                        </thead>
+                        <tbody id="transactionTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const categoriesConfig = {
+        expense: ["Транспорт/Бензин", "Продукты", "Жилье/Коммуналка", "Развлечения", "Одежда", "Прочее"],
+        income: ["Зарплата", "Стипендия", "Подработка/Фриланс", "Подарок", "Прочее"]
+    };
+
+    let myChart = null;
+    let barChart = null;
+
+    // Конфигурация выпадающего списка категорий
+    function updateCategorySelect() {
+        const type = document.getElementById("type").value;
+        const categorySelect = document.getElementById("category");
+        categorySelect.innerHTML = "";
+
+        categoriesConfig[type].forEach(cat => {
+            const opt = document.createElement("option");
+            opt.value = cat;
+            opt.textContent = cat;
+            categorySelect.appendChild(opt);
         });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            messageDiv.className = "mt-2 small text-successfw-bold";
-            messageDiv.innerText = `🎉 Пользователь ${data.username} успешно зарегистрирован!`;
-            document.getElementById("registerForm").reset();
-        } else {
-            messageDiv.className = "mt-2 small text-dangerfw-bold";
-            messageDiv.innerText = `❌ Ошибка: ${data.detail || "Не удалось зарегистрироваться"}`;
-        }
-    } catch (error) {
-        messageDiv.className = "mt-2 small text-dangerfw-bold";
-        messageDiv.innerText = "❌ Ошибка соединения с сервером";
     }
 
-    messageDiv.classList.remove("d-none");
-});
+    // Загрузка данных пользователя (баланс, список операций и графики)
+    async function loadData() {
+        try {
+            // 1. Получаем баланс
+            const balanceRes = await fetch('/transactions/balance');
+            if (balanceRes.status === 401) {
+                window.location.href = '/login-page';
+                return;
+            }
+            const balanceData = await balanceRes.json();
 
-    // Функция для отрисовки/обновления графика Chart.js
-    async function updateChart() {
-        const response = await fetch(`${API_URL}/analytics`);
-        const analyticsData = await response.json();
+            document.getElementById('balance').innerText = `${balanceData.balance} сом`;
+            document.getElementById('total_income').innerText = `+ ${balanceData.total_income} сом`;
+            document.getElementById('total_expense').innerText = `- ${balanceData.total_expense} сом`;
 
-        const categories = Object.keys(analyticsData);
-        const amounts = Object.values(analyticsData);
+            // Передаем итоговые суммы доходов и расходов в гистограмму
+            renderBarChart(balanceData.total_income, balanceData.total_expense);
 
-        const ctx = document.getElementById('analyticsChart').getContext('2d');
+            // 2. Получаем список транзакций
+            const txRes = await fetch('/transactions');
+            const transactions = await txRes.json();
+
+            const tableBody = document.getElementById('transactionTableBody');
+
+            // Быстрая генерация таблицы в памяти
+            const rows = transactions.map(tx => {
+                const isIncome = tx.type === 'income';
+                const amountClass = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
+                const prefix = isIncome ? '+' : '-';
+
+                return `
+                    <tr>
+                        <td class="fw-medium text-white">${tx.category}</td>
+                        <td class="text-muted small">${tx.description || ''}</td>
+                        <td class="${amountClass}">${prefix} ${tx.amount} сом</td>
+                        <td class="text-end">
+                            <button onclick="deleteTransaction('${tx.id}')" class="btn btn-link link-danger text-decoration-none btn-sm fw-medium">Удалить</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tableBody.innerHTML = rows;
+
+            // 3. Обновляем график аналитики расходов
+            renderAnalytics(transactions);
+
+        } catch (err) {
+            console.error("Ошибка при обновлении интерфейса:", err);
+        }
+    }
+
+    // Отрисовка диаграммы аналитики расходов (круг)
+    function renderAnalytics(transactions) {
+        const canvas = document.getElementById('analyticsChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+
+        const expenseData = {};
+        transactions.forEach(t => {
+            if (t.type === 'expense' || t.amount < 0) {
+                const amt = Math.abs(t.amount);
+                expenseData[t.category] = (expenseData[t.category] || 0) + amt;
+            }
+        });
+
+        const labels = Object.keys(expenseData);
+        const dataValues = Object.values(expenseData);
 
         if (myChart) {
             myChart.destroy();
         }
 
+        if (labels.length === 0) {
+            return;
+        }
+
         myChart = new Chart(ctx, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
-                labels: categories,
+                labels: labels,
                 datasets: [{
-                    data: amounts,
-                    backgroundColor: [
-                        '#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#9966ff'
-                    ]
+                    data: dataValues,
+                    backgroundColor: ['#ff6b6b', '#4ecdc4', '#ffe66d', '#1a535c', '#a55eed', '#ff9f1c'],
+                    borderWidth: 1,
+                    borderColor: '#1e1e1e'
                 }]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#ffffff',
+                            font: {family: 'system-ui'}
+                        }
+                    }
                 }
             }
         });
     }
 
-    // Функция получения данных из API и отрисовки таблицы
-    async function loadTransactions() {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        const tableBody = document.getElementById("transactionsTable");
-        tableBody.innerHTML = "";
+    // Отрисовка гистограммы доходов и расходов (столбцы)
+    function renderBarChart(income, expense) {
+        const canvas = document.getElementById('incomeExpenseChart');
+        if (!canvas) return;
 
-        data.forEach(item => {
-            const row = `
-                <tr>
-                    <td>${item.id}</td>
-                    <td class="fw-bold text-danger">-${item.amount} ₽</td>
-                    <td><span class="badge bg-secondary">${item.category}</span></td>
-                    <td class="text-muted">${item.description || ''}</td>
-                    <td>чё
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction(${item.id})">🗑️</button>
-                    </td>
-                </tr>
-            `;
-            tableBody.insertAdjacentHTML("beforeend", row);
+        const ctx = canvas.getContext('2d');
+
+        if (barChart) {
+            barChart.destroy(); // Уничтожаем старый график перед обновлением
+        }
+
+        barChart = new Chart(ctx, {
+            type: 'bar', // Тип графика — столбчатый
+            data: {
+                labels: ['Доходы', 'Расходы'],
+                datasets: [{
+                    label: 'Сумма в сомах',
+                    data: [income, expense],
+                    backgroundColor: ['#198754', '#dc3545'], // Зеленый для доходов, красный для расходов
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {color: '#ffffff'}, // Белый цвет текста для шкал
+                        grid: {color: '#333333'}  // Темная сетка
+                    },
+                    x: {
+                        ticks: {color: '#ffffff'},
+                        grid: {display: false}
+                    }
+                },
+                plugins: {
+                    legend: {display: false} // Скрываем легенду
+                }
+            }
         });
-
-        // Каждое обновление таблицы теперь дергает и обновление графика!
-        updateChart();
     }
 
-    // Функция отправки нового расхода в бэкенд
-    document.getElementById("transactionForm").addEventListener("submit", async (e) => {
+    // Слушатель формы создания новой записи
+    document.getElementById('transactionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const amount = document.getElementById("amount").value;
-        const category = document.getElementById("category").value;
-        const description = document.getElementById("description").value;
 
-        await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: parseFloat(amount), category, description })
-        });
+        const payload = {
+            amount: parseFloat(document.getElementById('amount').value),
+            category: document.getElementById('category').value,
+            type: document.getElementById('type').value,
+            description: document.getElementById('description').value || null
+        };
 
-        document.getElementById("transactionForm").reset();
-        loadTransactions();
+        try {
+            const res = await fetch('/transactions', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                document.getElementById('transactionForm').reset();
+                updateCategorySelect();
+                await loadData();
+            }
+        } catch (error) {
+            console.error("Ошибка при отправке транзакции:", error);
+        }
     });
 
-    // Функция удаления транзакции
+    // Функция удаления транзакции по ID
     async function deleteTransaction(id) {
-        if (confirm("Удалить эту запись?")) {
-            await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-            loadTransactions();
+        if (confirm("Вы уверены, что хотите удалить эту операцию?")) {
+            try {
+                const res = await fetch(`/transactions/${id}`, {method: 'DELETE'});
+                if (res.ok) await loadData();
+            } catch (error) {
+                console.error("Ошибка при удалении транзакции:", error);
+            }
         }
     }
 
-    // Запуск при загрузке страницы
-    loadTransactions();
+    // Функция выхода
+    function logout() {
+        document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        window.location.href = '/login-page';
+    }
+
+    // Инициализация событий и первичной загрузки данных
+    document.getElementById("type").addEventListener("change", updateCategorySelect);
+
+    window.onload = function () {
+        updateCategorySelect();
+        loadData();
+    };
 </script>
 </body>
 </html>
